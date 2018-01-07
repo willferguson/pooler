@@ -21,7 +21,7 @@ defmodule Pooler.PoolSuperSupervisor do
     child_spec = Supervisor.child_spec(
       Pooler.PoolSupervisor,
       id: pool_name,
-      start: {Pooler.PoolSupervisor, :start_link, [pool_name, worker_limit, worker_mfa]})
+      start: {Pooler.PoolSupervisor, :start_link, [[pool_name, worker_limit, worker_mfa]]})
 
     Supervisor.start_child(:ppool, child_spec)
 
