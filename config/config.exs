@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :pooler, key: :value
+#     config :waterpark, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:pooler, :key)
+#     Application.get_env(:waterpark, :key)
 #
 # You can also configure a 3rd-party app:
 #

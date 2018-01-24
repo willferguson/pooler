@@ -1,5 +1,5 @@
-# Pooler
+# Waterpark
 
-Process Pool system.
+Process Pool library for starting and supervising pools of workers.
 
-Elixir implementation of the Erlang process pool tutorial from learnyousomeerlang (http://learnyousomeerlang.com/building-applications-with-otp)
+Inspiration taken from learnyousomeerlang (http://learnyousomeerlang.com/building-applications-with-otp)
