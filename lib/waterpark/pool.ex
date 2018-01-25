@@ -6,6 +6,7 @@ defmodule Waterpark.Pool do
     Implementation of process pool using GenServer.
     Ability to start workers either synchronously
     or asynchronously (queueing and running when ready)
+    TODO Add function to query number of free workers
   """
 
   @registry_name Registry.Pool
@@ -76,7 +77,7 @@ defmodule Waterpark.Pool do
         } = state
       )
       when free_workers > 0 do
-    Logger.info(fn -> "Starting worker with #{inspect(args)}" end)
+    Logger.info(fn -> "Starting worker with #{inspect(args)} args" end)
     {:ok, worker_pid} = Supervisor.start_child(lifeguard_pid, args)
     ref = Process.monitor(worker_pid)
     Logger.debug(fn -> "Worker started with ref: #{inspect(ref)} pid: #{inspect(worker_pid)}" end)

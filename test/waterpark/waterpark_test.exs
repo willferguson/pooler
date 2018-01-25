@@ -7,6 +7,10 @@ defmodule Waterpark.WaterparkTest do
   end
 
   test "Start test worker" do
-    Waterpark.Owner.create_pool("test_pool", 5, {Waterpark.TestWorker, :start_link, []})
+    Waterpark.Owner.create_pool("test_pool", 3, {Waterpark.TestWorker, :start_link, []})
+    {:ok, pid1} = Waterpark.Pool.run("test_pool", ["1"])
+    {:ok, pid2} = Waterpark.Pool.run("test_pool", ["2"])
+    {:ok, pid3} = Waterpark.Pool.run("test_pool", ["3"])
+    {:error, _reason} = Waterpark.Pool.run("test_pool", ["too_much"])
   end
 end
