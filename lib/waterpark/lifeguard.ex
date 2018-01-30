@@ -25,13 +25,14 @@ defmodule Waterpark.Lifeguard do
         restart: :temporary
       )
 
-    Logger.debug(fn -> "Initialising #{__MODULE__} with #{inspect(worker_child_spec)}" end)
-    #TODO Fix issue with this not returning correct args [] 
-    Supervisor.init(
+    #TODO Fix issue with this not returning correct args []
+    spec = Supervisor.init(
       [worker_child_spec],
       strategy: :simple_one_for_one,
       max_restarts: 5,
       max_seconds: 3600
     )
+    Logger.debug(fn -> "Initialising #{__MODULE__} with #{inspect(spec)}" end)
+    spec
   end
 end

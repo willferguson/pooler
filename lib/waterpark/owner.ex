@@ -40,7 +40,7 @@ defmodule Waterpark.Owner do
     Supervisor.start_child(:waterpark_owner, child_spec)
   end
 
-  def stop_pool(pool_name) do
+  def remove_pool(pool_name) do
     Logger.info(fn -> "Shutting down #{pool_name}" end)
     Supervisor.terminate_child(:waterpark_owner, pool_name)
     Supervisor.delete_child(:waterpark_owner, pool_name)

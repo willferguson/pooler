@@ -77,6 +77,7 @@ defmodule Waterpark.Pool do
         } = state
       )
       when free_workers > 0 do
+
     Logger.info(fn -> "Starting worker with #{inspect(args)} args" end)
     {:ok, worker_pid} = Supervisor.start_child(lifeguard_pid, args)
     ref = Process.monitor(worker_pid)
@@ -110,7 +111,7 @@ defmodule Waterpark.Pool do
     end)
 
     child_spec = Supervisor.child_spec({Waterpark.Lifeguard, worker_mfa}, restart: :temporary)
-
+    Logger.debug("Initializing Lifeguard with child spec: #{inspect(child_spec)}")
     {:ok, pid} = Supervisor.start_child(supervisor_pid, child_spec)
     Process.link(pid)
     {:noreply, %Waterpark.Pool{state | lifeguard_pid: pid}}
