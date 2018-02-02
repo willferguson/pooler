@@ -54,6 +54,15 @@ defmodule Waterpark.Pool do
   end
 
   @doc """
+    Enqueues the given worker for some time in the future.
+    If there is room to execute now it will do, otherwise it will be queued and
+    executed when workers are available.
+  """
+  def enqueue(pool_name, args) do
+    GenServer.cast(via_registry(pool_name), {:enqueue, args})
+  end
+
+  @doc """
     Initializes this pools lifeguard, by placing it under this pool's
     supervsor's supervision tree
   """
@@ -71,25 +80,12 @@ defmodule Waterpark.Pool do
         {:run, args},
         _From,
         %Waterpark.Pool{
-          free_workers: free_workers,
-          worker_refs: refs,
-          lifeguard_pid: lifeguard_pid
+          free_workers: free_workers
         } = state
       )
       when free_workers > 0 do
 
-    Logger.info(fn -> "Starting worker with #{inspect(args)} args" end)
-    {:ok, worker_pid} = Supervisor.start_child(lifeguard_pid, args)
-    ref = Process.monitor(worker_pid)
-    Logger.debug(fn -> "Worker started with ref: #{inspect(ref)} pid: #{inspect(worker_pid)}" end)
-
-    state = %Waterpark.Pool{
-      state
-      | worker_refs: MapSet.put(refs, ref),
-        free_workers: free_workers - 1
-    }
-
-    Logger.debug(fn -> "#{state.pool_name} now has #{state.free_workers} workers available" end)
+    {worker_pid, state} = start_worker(args, state)
     {:reply, {:ok, worker_pid}, state}
   end
 
@@ -100,6 +96,25 @@ defmodule Waterpark.Pool do
       when free_workers <= 0 do
     Logger.warn(fn -> "#{state.pool_name} does not have any free workers" end)
     {:reply, {:error, "No free workers"}, state}
+  end
+
+  @doc """
+    Starts a worker with the given args - when we have space to start one
+  """
+  def handle_cast({:enqueue, args}, %Waterpark.Pool{free_workers: free_workers} = state)
+      when free_workers > 0 do
+    {_worker_pid, state} = start_worker(args, state)
+    {:noreply, state}
+  end
+
+  @doc """
+    Enqueues a worker to be executed when available.
+  """
+  def handle_cast({:enqueue, args}, %Waterpark.Pool{free_workers: free_workers} = state)
+      when free_workers <= 0 do
+    %Waterpark.Pool{queue: queue} = state
+    queue = :queue.in(args, queue)
+    {:noreply, %Waterpark.Pool{state | queue: queue}}
   end
 
   @doc """
@@ -137,21 +152,58 @@ defmodule Waterpark.Pool do
     {:noreply, state}
   end
 
+  #TODO Start new queued worker dis existing
   defp process_down_worker(ref, state) do
     Logger.debug(fn -> "Worker #{inspect(ref)} finished" end)
-    # For :run calls we just remove the ref from worker_refs and inc free_workers
-    %Waterpark.Pool{worker_refs: worker_refs, free_workers: free_workers} = state
+    %Waterpark.Pool{worker_refs: worker_refs, free_workers: free_workers, queue: queue} = state
+    #Remove stop tracking the reference
     worker_refs = MapSet.delete(worker_refs, ref)
-    state = %Waterpark.Pool{state | worker_refs: worker_refs, free_workers: free_workers + 1}
-    Logger.debug(fn -> "#{state.pool_name} now has #{state.free_workers} workers available" end)
-    {:noreply, state}
+    #Incremement free workers
+    state = %Waterpark.Pool{state
+                            | worker_refs: worker_refs,
+                              free_workers: free_workers + 1}
+    case :queue.out(queue) do
+      {{:value, args}, queue} ->
+        Logger.debug("Found queued worker - starting with args: #{inspect(args)}")
+        state = start_worker(args, %Waterpark.Pool{state | queue: queue})
+        {:noreply, state}
+      {:empty, _queue} ->
+        Logger.debug("No workers waiting in queue")
+        {:noreply, state}
+    end
+  end
+
+  def registry_name do
+    @registry_name
   end
 
   defp via_registry(name) do
     {:via, Registry, {@registry_name, name}}
   end
 
-  def registry_name do
-    @registry_name
+  #Starts a worker, decrementing the number of free workers. Assumes there is room.
+  defp start_worker(args, state) do
+    %Waterpark.Pool{
+      free_workers: free_workers,
+      worker_refs: refs,
+      lifeguard_pid: lifeguard_pid
+    } = state
+
+    Logger.info(fn -> "Starting worker with #{inspect(args)} args" end)
+    {:ok, worker_pid} = Supervisor.start_child(lifeguard_pid, args)
+    ref = Process.monitor(worker_pid)
+    Logger.debug(fn -> "Worker started with ref: #{inspect(ref)} pid: #{inspect(worker_pid)}" end)
+
+    state = %Waterpark.Pool{
+      state
+      | worker_refs: MapSet.put(refs, ref),
+        free_workers: free_workers - 1
+    }
+
+    Logger.debug(fn -> "#{state.pool_name} now has #{state.free_workers} workers available" end)
+    {worker_pid, state}
+
   end
+
+
 end

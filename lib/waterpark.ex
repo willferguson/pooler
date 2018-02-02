@@ -24,6 +24,10 @@ defmodule Waterpark do
     Waterpark.Pool.run(pool_name, args)
   end
 
+  def enqueue(pool_name, args) do
+    Waterpark.Pool.enqueue(pool_name, args)
+  end
+
   def stop do
     Waterpark.Owner.stop()
     System.stop()

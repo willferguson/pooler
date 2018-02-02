@@ -25,7 +25,6 @@ defmodule Waterpark.Lifeguard do
         restart: :temporary
       )
 
-    #TODO Fix issue with this not returning correct args []
     spec = Supervisor.init(
       [worker_child_spec],
       strategy: :simple_one_for_one,
