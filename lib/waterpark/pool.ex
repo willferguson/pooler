@@ -6,7 +6,6 @@ defmodule Waterpark.Pool do
     Implementation of process pool using GenServer.
     Ability to start workers either synchronously
     or asynchronously (queueing and running when ready)
-    TODO Add function to query number of free workers
   """
 
   @registry_name Registry.Pool
@@ -63,6 +62,17 @@ defmodule Waterpark.Pool do
   end
 
   @doc """
+    Fetches the status of the pool
+    Returns:
+    [free_workers: free_workers,
+      busy_workers: busy_workers,
+      queue_size: queue_size]
+  """
+  def status(pool_name) do
+    GenServer.call(via_registry(pool_name), :status)
+  end
+
+  @doc """
     Initializes this pools lifeguard, by placing it under this pool's
     supervsor's supervision tree
   """
@@ -84,7 +94,6 @@ defmodule Waterpark.Pool do
         } = state
       )
       when free_workers > 0 do
-
     {worker_pid, state} = start_worker(args, state)
     {:reply, {:ok, worker_pid}, state}
   end
@@ -96,6 +105,20 @@ defmodule Waterpark.Pool do
       when free_workers <= 0 do
     Logger.warn(fn -> "#{state.pool_name} does not have any free workers" end)
     {:reply, {:error, "No free workers"}, state}
+  end
+
+  @doc """
+    Callback for status call
+  """
+  def handle_call(:status, _From, state) do
+    %Waterpark.Pool{worker_refs: worker_refs, free_workers: free_workers, queue: queue} = state
+
+    {:reply,
+     [
+       free_workers: free_workers,
+       busy_workers: MapSet.size(worker_refs),
+       queue_size: :queue.len(queue)
+     ], state}
   end
 
   @doc """
@@ -152,21 +175,20 @@ defmodule Waterpark.Pool do
     {:noreply, state}
   end
 
-  #TODO Start new queued worker dis existing
   defp process_down_worker(ref, state) do
     Logger.debug(fn -> "Worker #{inspect(ref)} finished" end)
     %Waterpark.Pool{worker_refs: worker_refs, free_workers: free_workers, queue: queue} = state
-    #Remove stop tracking the reference
+    # Remove stop tracking the reference
     worker_refs = MapSet.delete(worker_refs, ref)
-    #Incremement free workers
-    state = %Waterpark.Pool{state
-                            | worker_refs: worker_refs,
-                              free_workers: free_workers + 1}
+    # Incremement free workers
+    state = %Waterpark.Pool{state | worker_refs: worker_refs, free_workers: free_workers + 1}
+
     case :queue.out(queue) do
       {{:value, args}, queue} ->
         Logger.debug("Found queued worker - starting with args: #{inspect(args)}")
-        state = start_worker(args, %Waterpark.Pool{state | queue: queue})
+        {_worker_pid, state} = start_worker(args, %Waterpark.Pool{state | queue: queue})
         {:noreply, state}
+
       {:empty, _queue} ->
         Logger.debug("No workers waiting in queue")
         {:noreply, state}
@@ -181,7 +203,7 @@ defmodule Waterpark.Pool do
     {:via, Registry, {@registry_name, name}}
   end
 
-  #Starts a worker, decrementing the number of free workers. Assumes there is room.
+  # Starts a worker, decrementing the number of free workers. Assumes there is room.
   defp start_worker(args, state) do
     %Waterpark.Pool{
       free_workers: free_workers,
@@ -202,8 +224,5 @@ defmodule Waterpark.Pool do
 
     Logger.debug(fn -> "#{state.pool_name} now has #{state.free_workers} workers available" end)
     {worker_pid, state}
-
   end
-
-
 end

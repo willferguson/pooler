@@ -11,7 +11,12 @@ defmodule Waterpark.TestWorker do
   end
 
   def init(args) do
+    # send(self(), :test)
     {:ok, args}
   end
 
+  def handle_info(:test, state) do
+    :timer.sleep(2500)
+    {:stop, :normal, state}
+  end
 end

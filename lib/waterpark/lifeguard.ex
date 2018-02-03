@@ -3,7 +3,7 @@ defmodule Waterpark.Lifeguard do
   require Logger
 
   @moduledoc """
-    Responsible for supervising a pool of workers
+    Responsible for supervising the workers in the pool
   """
 
   @doc """
@@ -25,12 +25,14 @@ defmodule Waterpark.Lifeguard do
         restart: :temporary
       )
 
-    spec = Supervisor.init(
-      [worker_child_spec],
-      strategy: :simple_one_for_one,
-      max_restarts: 5,
-      max_seconds: 3600
-    )
+    spec =
+      Supervisor.init(
+        [worker_child_spec],
+        strategy: :simple_one_for_one,
+        max_restarts: 5,
+        max_seconds: 3600
+      )
+
     Logger.debug(fn -> "Initialising #{__MODULE__} with #{inspect(spec)}" end)
     spec
   end

@@ -3,7 +3,7 @@ defmodule Waterpark.Owner do
   use Supervisor
 
   @moduledoc """
-    Owner of the waterpark - responsible for creating pools and destroying pools.
+    Owner of the waterpark - responsible for creating and destroying pools.
   """
 
   def start_link(_) do
@@ -44,5 +44,9 @@ defmodule Waterpark.Owner do
     Logger.info(fn -> "Shutting down #{pool_name}" end)
     Supervisor.terminate_child(:waterpark_owner, pool_name)
     Supervisor.delete_child(:waterpark_owner, pool_name)
+  end
+
+  def pool_count() do
+    Supervisor.count_children(:waterpark_owner).active
   end
 end

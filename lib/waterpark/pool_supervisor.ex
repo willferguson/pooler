@@ -2,6 +2,10 @@ defmodule Waterpark.PoolSupervisor do
   use Supervisor
   require Logger
 
+  @moduledoc """
+    Supervises a pool and pool lifeguard
+  """
+
   def start_link(pool_name, worker_limit, worker_mfa) do
     Logger.info(fn -> "Starting pool supervisor for #{inspect(pool_name)}" end)
     Supervisor.start_link(__MODULE__, {pool_name, worker_limit, worker_mfa})
