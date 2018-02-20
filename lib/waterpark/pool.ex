@@ -211,8 +211,8 @@ defmodule Waterpark.Pool do
       lifeguard_pid: lifeguard_pid
     } = state
 
-    Logger.info(fn -> "Starting worker with #{inspect(args)} args" end)
-    {:ok, worker_pid} = Supervisor.start_child(lifeguard_pid, args)
+    Logger.info(fn -> "Starting worker with args: #{inspect(args)}" end)
+    {:ok, worker_pid} = Supervisor.start_child(lifeguard_pid, [args])
     ref = Process.monitor(worker_pid)
     Logger.debug(fn -> "Worker started with ref: #{inspect(ref)} pid: #{inspect(worker_pid)}" end)
 

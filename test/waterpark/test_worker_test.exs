@@ -1,8 +1,8 @@
 defmodule Waterpark.TestWorker do
   use GenServer
+  require Logger
 
   def start_link(args) do
-    IO.puts("Starting Test Worker...")
     GenServer.start_link(__MODULE__, args)
   end
 
@@ -11,12 +11,8 @@ defmodule Waterpark.TestWorker do
   end
 
   def init(args) do
-    # send(self(), :test)
+    Logger.info("TestWorker started with args: #{inspect(args)}")
     {:ok, args}
   end
 
-  def handle_info(:test, state) do
-    :timer.sleep(2500)
-    {:stop, :normal, state}
-  end
 end

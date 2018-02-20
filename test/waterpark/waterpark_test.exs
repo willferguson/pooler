@@ -20,9 +20,9 @@ defmodule Waterpark.WaterparkTest do
 
   test "Start test worker with run" do
     Waterpark.create_pool("test_pool", 3, {Waterpark.TestWorker, :start_link, []})
-    {:ok, pid1} = Waterpark.run("test_pool", [[]])
+    {:ok, pid1} = Waterpark.run("test_pool", [])
     {:ok, pid2} = Waterpark.run("test_pool", ["2", "3"])
-    {:ok, pid3} = Waterpark.run("test_pool", ["3"])
+    {:ok, pid3} = Waterpark.run("test_pool", "3")
     {:error, _reason} = Waterpark.run("test_pool", ["too_much"])
     Waterpark.remove_pool("test_pool")
   end
@@ -33,7 +33,7 @@ defmodule Waterpark.WaterparkTest do
     assert free == 2
     assert busy == 0
     assert queued == 0
-    :ok = Waterpark.enqueue("test_pool2", ["a"])
+    :ok = Waterpark.enqueue("test_pool2", "a")
     :ok = Waterpark.enqueue("test_pool2", ["b"])
     :ok = Waterpark.enqueue("test_pool2", ["c"])
     [free_workers: free, busy_workers: busy, queue_size: queued] = Waterpark.status("test_pool2")
