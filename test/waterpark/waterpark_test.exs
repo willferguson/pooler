@@ -21,7 +21,7 @@ defmodule Waterpark.WaterparkTest do
   test "Start test worker with run" do
     Waterpark.create_pool("test_pool", 3, {Waterpark.TestWorker, :start_link, []})
     {:ok, pid1} = Waterpark.run("test_pool", [[]])
-    {:ok, pid2} = Waterpark.run("test_pool", ["2"])
+    {:ok, pid2} = Waterpark.run("test_pool", ["2", "3"])
     {:ok, pid3} = Waterpark.run("test_pool", ["3"])
     {:error, _reason} = Waterpark.run("test_pool", ["too_much"])
     Waterpark.remove_pool("test_pool")
