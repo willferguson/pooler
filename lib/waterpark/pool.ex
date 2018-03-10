@@ -149,7 +149,7 @@ defmodule Waterpark.Pool do
     end)
 
     child_spec = Supervisor.child_spec({Waterpark.Lifeguard, worker_mfa}, restart: :temporary)
-    Logger.debug("Initializing Lifeguard with child spec: #{inspect(child_spec)}")
+    Logger.debug(fn -> "Initializing Lifeguard with child spec: #{inspect(child_spec)}" end)
     {:ok, pid} = Supervisor.start_child(supervisor_pid, child_spec)
     Process.link(pid)
     {:noreply, %Waterpark.Pool{state | lifeguard_pid: pid}}
@@ -185,12 +185,12 @@ defmodule Waterpark.Pool do
 
     case :queue.out(queue) do
       {{:value, args}, queue} ->
-        Logger.debug("Found queued worker - starting with args: #{inspect(args)}")
+        Logger.debug(fn -> "Found queued worker - starting with args: #{inspect(args)}" end)
         {_worker_pid, state} = start_worker(args, %Waterpark.Pool{state | queue: queue})
         {:noreply, state}
 
       {:empty, _queue} ->
-        Logger.debug("No workers waiting in queue")
+        Logger.debug(fn -> "No workers waiting in queue" end)
         {:noreply, state}
     end
   end

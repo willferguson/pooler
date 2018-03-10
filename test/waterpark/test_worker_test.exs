@@ -14,5 +14,4 @@ defmodule Waterpark.TestWorker do
     Logger.info("TestWorker started with args: #{inspect(args)}")
     {:ok, args}
   end
-
 end

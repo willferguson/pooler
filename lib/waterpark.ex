@@ -1,21 +1,10 @@
 defmodule Waterpark do
-  use Application
   require Logger
 
   @moduledoc """
-    Entrypoint to application and API facade to enable easier management.
-    This module contains all "public" functions necessary to start pools and workers
+    API facade for Waterpark application.
+    All functionality can be executed from this module
   """
-
-  def start(_type, _args) do
-    children = [
-      {Registry, keys: :unique, name: Waterpark.Pool.registry_name()},
-      Waterpark.Owner
-    ]
-
-    Logger.info(fn -> "Starting waterpark" end)
-    Supervisor.start_link(children, strategy: :one_for_all)
-  end
 
   def create_pool(pool_name, worker_limit, worker_mfa) do
     Waterpark.Owner.create_pool(pool_name, worker_limit, worker_mfa)

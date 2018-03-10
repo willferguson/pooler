@@ -1,8 +1,8 @@
 defmodule Waterpark.WaterparkTest do
   use ExUnit.Case
 
-  setup_all do
-    Application.start(Waterpark)
+  setup do
+    start_supervised(Waterpark.Owner, [])
     :ok
   end
 

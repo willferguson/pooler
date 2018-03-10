@@ -17,7 +17,7 @@ defmodule Waterpark.Owner do
 
   def init(_) do
     Supervisor.init(
-      [],
+      [{Registry, keys: :unique, name: Waterpark.Pool.registry_name()}],
       strategy: :one_for_one,
       max_restarts: 5,
       max_seconds: 3600
@@ -47,6 +47,7 @@ defmodule Waterpark.Owner do
   end
 
   def pool_count() do
-    Supervisor.count_children(:waterpark_owner).active
+    # As this is also supervising the registry, we need to -1 for supervised pools
+    Supervisor.count_children(:waterpark_owner).active - 1
   end
 end
